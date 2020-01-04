@@ -1,28 +1,29 @@
 <template>
   <div class="container">
     <!-- 头部 -->
-    <div class="head" :style="headbg">
+    <div  class="head" :style="{background: 'url(' + headData.avatar + ') rgba(0, 0, 0, .6)  center center no-repeat',
+                                backgroundSize : ' 100%' }" v-if="headData.supports">
       <div class="head-top">
         <div class="logo">
-          <img :src="loge" />
+          <img :src="headData.avatar" />
         </div>
         <div class="title">
           <h1>
-            <img :src="pinpai" />粥品香坊（大运村）
+            <img :src="pinpai" />{{headData.name}}
           </h1>
-          <h3>蜂鸟转送/38分钟送达</h3>
+          <h3>{{headData.description}}/{{headData.deliveryTime}}分钟送达</h3>
           <div class="discount">
-            <p>
+            <p v-if="headData.supports">
               <img :src="jian" />
-              在线支付，满50减28，满100减20
+              {{headData.supports[0].description}}
             </p>
-            <span>5个 ></span>
+            <span>{{headData.supportsLength}}个 ></span>
           </div>
         </div>
       </div>
       <div class="notice">
         <p>
-          <img :src="gonggao" alt />周香坊秘制酱料工艺，采用现代化技术经立信制作送达所大三大所多所
+          <img :src="gonggao" alt />{{headData.bulletin}}
         </p>
       </div>
     </div>
@@ -53,31 +54,23 @@
         </span>
         <span>￥0</span>
       </div>
-      <div class="moreprice">另需配送费xxx元</div>
-      <div class="startsend">￥20起送</div>
+      <div class="moreprice">另需配送费{{headData.deliveryPrice}}元</div>
+      <div class="startsend">￥{{headData.minPrice}}起送</div>
     </div>
   </div>
 </template>
 
 <script>
+import {getSeller} from '@/api/index.js'
 export default {
   data() {
     return {
       // 头部数据 背景图
-      headbg: {
-        background:
-          " url(" +
-          require("@/assets/images/logo.jpg") +
-          ") rgba(0, 0, 0, .7)  0 center",
-        backgroundSize: "100% ",
-        backgroundBlendMode: "multiply"
-      },
-      loge: require("@/assets/images/logo.jpg"),
+      headData:{},
       pinpai: require("@/assets/images/pinpai.png"),
       jian: require("@/assets/images/jian.png"),
       gonggao: require("@/assets/images/gonggao.png"),
       // nav数据
-      navList: ["商品", "评价", "商家"],
       index: 0,
 
       // 尾部
@@ -88,6 +81,13 @@ export default {
     beAction(i) {
       this.index = i;
     }
+  },
+  created() {
+    const v = this;
+    getSeller().then( rsdata => {
+      v.headData = rsdata;
+      v.headData.supportsLength = v.headData.supports.length;
+    })
   }
 };
 </script>
@@ -101,6 +101,7 @@ export default {
   // 头部
   .head {
     height: 134px;
+    background-blend-mode: multiply;
     .head-top {
       display: flex;
       justify-content: start;
@@ -117,6 +118,9 @@ export default {
         font-weight: 700;
         color: #fff;
         font-size: 16px;
+        width: 8em;
+        white-space: nowrap;
+        text-overflow: ellipsis;
         line-height: 26px;
         img {
           height: 16px;
@@ -154,7 +158,7 @@ export default {
           display: inline-block;
           width: 42px;
           height: 24px;
-          background-color: rgba(0, 0, 0, 0.7);
+          background-color: rgba(0, 0, 0, 0.6);
           border-radius: 12px;
           text-align: center;
           font-size: 10px;

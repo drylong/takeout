@@ -1,84 +1,28 @@
 <template>
   <div class="goods">
     <div class="sidebar">
-      <ul>
-        <li v-for="(val,i) in navList" :key="i">{{val}}</li>
+      <ul class="content">
+        <li v-for="(val,i) in navList" :key="i" :class="{active: navIndex === i}"><p @click="clicked(i)" >{{val.name}}</p></li>
       </ul>
     </div>
-    <div class="goods-list">
-      <ul>
-        <li class="protitle">特色粥品</li>
-        <li class="products">
-          <div class="pimg">
-            <img :src="produrt1" alt />
-          </div>
-          <div class="dec">
-            <p class="name">皮蛋瘦肉粥配包子套餐</p>
-            <p class="msg">咸粥</p>
-            <p class="state">月售11230份 好评率100%</p>
-            <p class="price">
-              ￥
-              <span class="nowprice">24</span>
-              <del>￥28</del>
-              <span class="add">
-                <img :src="add" alt />
-              </span>
-            </p>
-          </div>
-        </li>
-        <li class="protitle">特色粥品</li>
-        <li class="products">
-          <div class="pimg">
-            <img :src="produrt1" alt />
-          </div>
-          <div class="dec">
-            <p class="name">皮蛋瘦肉粥配包子套餐</p>
-            <p class="msg">咸粥</p>
-            <p class="state">月售11230份 好评率100%</p>
-            <p class="price">
-              ￥
-              <span class="nowprice">24</span>
-              <del>￥28</del>
-              <span class="add">
-                <img :src="add" alt />
-              </span>
-            </p>
-          </div>
-        </li>
-        <li class="products">
-          <div class="pimg">
-            <img :src="produrt1" alt />
-          </div>
-          <div class="dec">
-            <p class="name">皮蛋瘦肉粥配包子套餐</p>
-            <p class="msg">咸粥</p>
-            <p class="state">月售11230份 好评率100%</p>
-            <p class="price">
-              ￥
-              <span class="nowprice">24</span>
-              <del>￥28</del>
-              <span class="add">
-                <img :src="add" alt />
-              </span>
-            </p>
-          </div>
-        </li>
-        <li class="products">
-          <div class="pimg">
-            <img :src="produrt1" alt />
-          </div>
-          <div class="dec">
-            <p class="name">皮蛋瘦肉粥配包子套餐</p>
-            <p class="msg">咸粥</p>
-            <p class="state">月售11230份 好评率100%</p>
-            <p class="price">
-              ￥
-              <span class="nowprice">24</span>
-              <del>￥28</del>
-              <span class="add">
-                <img :src="add" alt />
-              </span>
-            </p>
+    <div class="goodsList">
+      <ul class="content">
+        <li v-for="(val, i) in navList" :key="i" :id="i">
+          <div class="protitle" >{{val.name}}</div>
+          <div class="products" v-for="( val,i) in val.foods" :key='i'>
+            <div class="pimg">
+              <img :src="val.image" alt />
+            </div>
+            <div class="dec">
+              <p class="name">{{val.name}}</p>
+              <p class="msg">{{val.description}}</p>
+              <p class="state">月售{{val.sellCount}}份 好评率{{val.rating}}%</p>
+              <p class="price">￥<span class="nowprice">24</span><del>￥28</del>
+                <span class="add">
+                  <img :src="add" alt />
+                </span>
+              </p>
+            </div>
           </div>
         </li>
       </ul>
@@ -87,28 +31,71 @@
 </template>
 
 <script>
+import { getGoods} from '@/api/index.js';
+import Bscroll from 'better-scroll';
+
+
 export default {
   data() {
     return {
-      navList: [
-        "热销榜",
-        "担任特色套餐",
-        "冒菜",
-        "特色粥品",
-        "精选热菜",
-        "爽口凉菜",
-        "半成品",
-        "饭类",
-        "面食"
-      ],
+      navList: [],
+      navIndex: 0,
       // 右边商品
-      produrt1: require("@/assets/images/product1.jpg"),
-      produrt2: require("@/assets/images/product2.jpg"),
-      produrt3: require("@/assets/images/product3.jpg"),
-      produrt4: require("@/assets/images/product4.jpg"),
+
+      
       add: require("@/assets/images/add.svg"),
       red: require("@/assets/images/red.svg")
     };
+  },
+  methods: {
+    clicked(i) {
+      this.navIndex = i;
+      // 实现右侧锚点效果
+      this.Right.scrollToElement(document.getElementById(i), 888);
+      
+    }
+  },
+  created() {
+    const v = this;
+    getGoods().then( rsdata => {
+      v.navList = rsdata;
+    })
+   
+  },
+  mounted() {
+    const options = {
+      click: true,
+      taps: true
+     };
+    this.Left = new Bscroll('.sidebar', options);
+    this.Right = new Bscroll('.goodsList', {
+      probeType: 3
+    });
+    // const v = this;
+    this.Right.on('scroll', obj => {
+      for (let i = 0; i < this.elHeight.length; i++) {
+        if(i ===this.elHeight.length - 1) {
+          this.navIndex = i;
+          break;
+        }
+        if(Math.abs(obj.y)>=this.elHeight[i] && Math.abs(obj.y)<this.elHeight[i+1]) {
+          this.navIndex = i;
+          this.Left.scrollToElement('.active', 888);
+          break;
+        }
+      }
+    })
+    
+  },
+  computed: {
+    // 元素高度
+    elHeight() {
+      let arr = [];
+      for(let i = 0; i < this.navList.length; i++) {
+        arr.push(document.getElementById(i).offsetTop);
+      }
+      return arr;
+    }
   }
 };
 </script>
@@ -128,16 +115,27 @@ export default {
     ul {
       background-color: #f4f5f7;
       li {
-        padding: 20px 0;
-        text-align: center;
-        font-size: 14px;
-        line-height: 18px;
-        margin: 0 10px;
-        border-bottom: 1px solid #dddee0;
+        background-color: #f5f5f5;
+        p {
+          height: 60px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          font-size: 14px;
+          line-height: 18px;
+          margin: 0 10px;
+          border-bottom: 1px solid #dddee0;
+        }
+      }
+      .active {
+        background-color: #fff;
+        p {
+          border-color: #fff;
+        }
       }
     }
   }
-  .goods-list {
+  .goodsList {
     flex: 1;
     // height: 100%;
     overflow: scroll;
@@ -165,6 +163,10 @@ export default {
             font-size: 12px;
             line-height: 16px;
             color: #94999d;
+            width: 12em;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
           }
           .state {
             font-size: 12px;
